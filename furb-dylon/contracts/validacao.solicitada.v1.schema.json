@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "validacao.solicitada.v1.schema.json",
+  "title": "validacao.solicitada",
+  "description": "Comando inscricoes -> coletor-dion: testar o login no DION",
+  "allOf": [
+    {
+      "$ref": "envelope.schema.json"
+    }
+  ],
+  "properties": {
+    "type": {
+      "const": "validacao.solicitada"
+    },
+    "version": {
+      "const": 1
+    },
+    "payload": {
+      "type": "object",
+      "required": [
+        "inscricaoId",
+        "matricula",
+        "secretName"
+      ],
+      "properties": {
+        "inscricaoId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "matricula": {
+          "type": "string"
+        },
+        "secretName": {
+          "type": "string",
+          "description": "Nome do segredo no Secrets Manager com a senha"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,124 @@
+name: furb-dylon
+
+x-aws-env: &aws-env
+  AWS_ENDPOINT_URL: http://ministack:4566
+  AWS_REGION: us-east-1
+  AWS_DEFAULT_REGION: us-east-1
+  AWS_ACCESS_KEY_ID: test
+  AWS_SECRET_ACCESS_KEY: test
+
+services:
+  ministack:
+    image: ministackorg/ministack:latest
+    ports:
+      - "4566:4566"
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./infra/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 3s
+      retries: 20
+
+  aws-init:
+    build: ./infra
+    environment:
+      <<: *aws-env
+      SES_REMETENTE: ${SES_REMETENTE:-dylon@furb-dylon.dev}
+    depends_on:
+      - ministack
+
+  inscricoes:
+    build: ./services/inscricoes
+    environment:
+      <<: *aws-env
+      DB_URL: jdbc:postgresql://postgres:5432/inscricoes
+      DB_USER: inscricoes
+      DB_PASSWORD: inscricoes
+      VAGAS_TOTAL: ${VAGAS_TOTAL:-10}
+      VALIDACAO_TIMEOUT_S: ${VALIDACAO_TIMEOUT_S:-15}
+      QUEUE_ENTRADA: inscricoes
+      QUEUE_COLETOR: coletor
+      TOPIC_INSCRICOES: inscricoes-eventos
+    ports:
+      - "8081:8080"
+    depends_on:
+      postgres: { condition: service_healthy }
+      aws-init: { condition: service_completed_successfully }
+    restart: unless-stopped
+
+  coletor-dion:
+    build: ./services/coletor-dion
+    environment:
+      <<: *aws-env
+      DB_DSN: postgresql://coletor:coletor@postgres:5432/coletor
+      QUEUE_ENTRADA: coletor
+      QUEUE_INSCRICOES: inscricoes
+      QUEUE_NOTAS: notas
+      BUCKET_SNAPSHOTS: dylon-snapshots
+      DION_MODE: ${DION_MODE:-real}
+      DION_URL: ${DION_URL:-https://www.furb.br/dion}
+      DION_LATENCIA_MS: ${DION_LATENCIA_MS:-500}
+      DION_TAXA_FALHA: ${DION_TAXA_FALHA:-0}
+      COLETA_INTERVALO_S: ${COLETA_INTERVALO_S:-120}
+    ports:
+      - "8082:8080"
+    depends_on:
+      postgres: { condition: service_healthy }
+      aws-init: { condition: service_completed_successfully }
+    restart: unless-stopped
+
+  notas:
+    build: ./services/notas
+    environment:
+      <<: *aws-env
+      DB_URL: jdbc:postgresql://postgres:5432/notas
+      DB_USER: notas
+      DB_PASSWORD: notas
+      QUEUE_ENTRADA: notas
+      TOPIC_NOTAS: notas-eventos
+      PROCESSAMENTO_MS: ${PROCESSAMENTO_MS:-300}
+    deploy:
+      replicas: 3
+    depends_on:
+      postgres: { condition: service_healthy }
+      aws-init: { condition: service_completed_successfully }
+    restart: unless-stopped
+
+  notificacao:
+    build: ./services/notificacao
+    environment:
+      <<: *aws-env
+      DB_URL: postgresql://notificacao:notificacao@postgres:5432/notificacao
+      QUEUE_ENTRADA: notificacao
+      SES_REMETENTE: ${SES_REMETENTE:-dylon@furb-dylon.dev}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+    ports:
+      - "8084:8080"
+    depends_on:
+      postgres: { condition: service_healthy }
+      aws-init: { condition: service_completed_successfully }
+    restart: unless-stopped
+
+  painel:
+    build: ./painel
+    environment:
+      <<: *aws-env
+      COMPOSE_PROJECT: furb-dylon
+    ports:
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      aws-init: { condition: service_completed_successfully }
+    restart: unless-stopped

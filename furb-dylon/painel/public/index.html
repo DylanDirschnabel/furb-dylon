@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Furb Dylon</title>
+<link href="https://fonts.googleapis.com/css2?family=Titillium+Web:ital,wght@0,400;0,600;1,600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; display: flex; flex-direction: column; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; background: #fff; font-size: 14px; }
+  .largura { width: 100%; max-width: 1000px; margin: 0 auto; padding: 0 20px; }
+  .topo { background: #005ca8; color: #fff; padding: 18px 0 14px; }
+  .marca { font-family: 'Titillium Web', Arial, sans-serif; font-weight: 600; font-style: italic; font-size: 34px; letter-spacing: .5px; line-height: 1; }
+  .marca small { display: block; font-style: normal; font-weight: 400; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; opacity: .85; margin-top: 4px; }
+  .subtopo { background: #004f92; color: #fff; border-bottom: 3px solid #f2c200; }
+  .subtopo .largura { padding-top: 8px; padding-bottom: 8px; font-size: 20px; }
+  .faixa { height: 40px; background: #f4f4ef; }
+  main { flex: 1; padding: 60px 0; }
+  h1 { color: #005ca8; font-weight: 400; font-size: 18px; margin: 0 0 10px; }
+  .caixa { border: 1px solid #ddd; border-radius: 3px; padding: 36px 20px; }
+  form { max-width: 484px; margin: 0 auto; display: flex; flex-direction: column; }
+  .dica { color: #666; font-size: 13px; margin: 0 0 18px; }
+  label { font-weight: 700; font-size: 14px; margin-bottom: 6px; }
+  .campo { display: flex; border: 1px solid #ccc; border-radius: 4px; overflow: hidden; margin-bottom: 16px; }
+  .campo:focus-within { border-color: #66afe9; box-shadow: 0 0 6px rgba(102,175,233,.6); }
+  .campo input { flex: 1; min-width: 0; border: 0; padding: 7px 12px; font: inherit; outline: none; }
+  .campo span { padding: 7px 12px; background: #eee; color: #555; border-left: 1px solid #ccc; }
+  button { align-self: flex-start; background: #428bca; border: 1px solid #357ebd; color: #fff; padding: 7px 12px; border-radius: 4px; font: inherit; cursor: pointer; }
+  button:hover { background: #3071a9; } button:disabled { opacity: .6; cursor: wait; }
+  .resultado { margin-top: 16px; padding: 10px 12px; border-radius: 4px; background: #eaf3fb; color: #23527c; border: 1px solid #bcdaf2; }
+  .resultado.erro { background: #fdecea; color: #a94442; border-color: #ebccd1; }
+  .resultado:empty { display: none; }
+  .vagas { margin-top: 22px; font-size: 13px; color: #666; }
+  .medidor { height: 8px; background: #e6eaed; border-radius: 4px; overflow: hidden; margin-top: 6px; }
+  .medidor div { height: 100%; background: #428bca; transition: width .3s; }
+  .faixa-rodape { height: 40px; background: #f4f4ef; }
+  footer { background: #005ca8; color: #fff; border-top: 3px solid #f2c200; font-size: 11px; }
+  footer .largura { padding-top: 14px; padding-bottom: 14px; text-align: right; line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="topo"><div class="largura"><div class="marca">Furb Dylon<small>Monitor de notas</small></div></div></div>
+<div class="subtopo"><div class="largura">Monitoramento de Notas</div></div>
+<div class="faixa"></div>
+<main>
+  <div class="largura">
+    <h1>Identificação do Usuário</h1>
+    <div class="caixa">
+      <form id="form">
+        <p class="dica">Entre com o mesmo usuário e senha do DION.</p>
+        <label for="usuario">Nome de Usuário</label>
+        <div class="campo"><input id="usuario" name="usuario" placeholder="Nome de Usuário" autocomplete="username" required><span>@furb.br</span></div>
+        <label for="senha">Senha</label>
+        <div class="campo"><input id="senha" name="senha" type="password" placeholder="Senha" autocomplete="current-password" required></div>
+        <button>Confirmar</button>
+        <div class="resultado" id="resultado"></div>
+        <div class="vagas">Vagas de monitoramento: <span id="vagas-txt">–</span>
+          <div class="medidor"><div id="vagas-barra" style="width:0"></div></div>
+        </div>
+      </form>
+    </div>
+  </div>
+</main>
+<div class="faixa-rodape"></div>
+<footer><div class="largura">Furb Dylon, trabalho final de Sistemas Distribuídos<br>Projeto acadêmico, não oficial</div></footer>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const TEXTO = {
+  VALIDANDO: 'Validando seu login no DION…',
+  CONFIRMADA: 'Login confirmado! Entrando…',
+  SEM_VAGAS: 'Todas as vagas de monitoramento estão ocupadas.',
+  SENHA_INVALIDA: 'Usuário ou senha inválidos no DION.',
+  DION_INDISPONIVEL: 'O DION está fora do ar no momento. Tente de novo.',
+  TIMEOUT: 'O DION demorou demais para responder. Tente de novo.',
+};
+function mensagem(txt, erro) { const r = $('#resultado'); r.textContent = txt; r.classList.toggle('erro', !!erro); }
+function entrar(usuario) {
+  try { localStorage.setItem('dylon.usuario', usuario); } catch {}
+  location.href = `painel.html?u=${encodeURIComponent(usuario)}`;
+}
+async function vagas() {
+  try {
+    const v = await (await fetch('/api/vagas')).json();
+    $('#vagas-txt').textContent = `${v.ocupadas} de ${v.total} ocupadas`;
+    $('#vagas-barra').style.width = `${(100 * v.ocupadas) / v.total}%`;
+  } catch {}
+}
+async function acompanhar(id, usuario) {
+  for (let i = 0; i < 60; i++) {
+    const r = await (await fetch(`/api/inscricoes/${id}`)).json();
+    if (r.status === 'RECUSADA') { mensagem(TEXTO[r.motivo] ?? `Recusado: ${r.motivo}`, true); vagas(); return; }
+    mensagem(TEXTO[r.status] ?? r.status);
+    vagas();
+    if (r.status === 'CONFIRMADA') { setTimeout(() => entrar(usuario), 1000); return; }
+    await new Promise((ok) => setTimeout(ok, 1000));
+  }
+}
+$('#form').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const btn = ev.target.querySelector('button');
+  btn.disabled = true;
+  try {
+    const usuario = ev.target.usuario.value.trim().replace(/@furb\.br$/i, '');
+    const senha = ev.target.senha.value;
+    mensagem('Enviando…');
+    const login = await fetch('/api/login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ matricula: usuario, senha }),
+    });
+    if (login.status === 200) { mensagem('Login confirmado! Entrando…'); setTimeout(() => entrar(usuario), 600); return; }
+    if (login.status === 401) { ev.target.senha.value = ''; mensagem('Usuário ou senha inválidos.', true); return; }
+    if (login.status === 409) { mensagem('Sua inscrição ainda está sendo validada. Tente de novo em instantes.'); return; }
+    if (login.status !== 404) { mensagem('Serviço indisponível. Tente de novo.', true); return; }
+    const resp = await fetch('/api/inscricoes', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ matricula: usuario, senha, email: `${usuario}@furb.br` }),
+    });
+    const r = await resp.json();
+    ev.target.senha.value = '';
+    if (!r.id) { mensagem(r.erro ?? 'Não foi possível entrar.', true); return; }
+    await acompanhar(r.id, usuario);
+  } catch { mensagem('Serviço indisponível. Tente de novo.', true); } finally { btn.disabled = false; }
+});
+vagas(); setInterval(vagas, 3000);
+</script>
+</body>
+</html>

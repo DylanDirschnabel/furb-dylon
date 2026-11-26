@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "envelope.schema.json",
+  "title": "Envelope comum a todas as mensagens",
+  "type": "object",
+  "required": [
+    "messageId",
+    "correlationId",
+    "type",
+    "version",
+    "occurredAt",
+    "payload"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "messageId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Único por mensagem; usado para idempotência"
+    },
+    "correlationId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Id da inscrição; atravessa toda a saga"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "validacao.solicitada",
+        "validacao.concluida",
+        "inscricao.confirmada",
+        "inscricao.recusada",
+        "notas.snapshot",
+        "notas.novas"
+      ]
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "occurredAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "payload": {
+      "type": "object"
+    }
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "notas.novas.v1.schema.json",
+  "title": "notas.novas",
+  "description": "Evento (SNS notas-eventos) -> notificacao: notas novas ou alteradas de uma raspagem",
+  "allOf": [
+    {
+      "$ref": "envelope.schema.json"
+    }
+  ],
+  "properties": {
+    "type": {
+      "const": "notas.novas"
+    },
+    "version": {
+      "const": 1
+    },
+    "payload": {
+      "type": "object",
+      "required": [
+        "matricula",
+        "notas"
+      ],
+      "properties": {
+        "matricula": {
+          "type": "string"
+        },
+        "notas": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "disciplina",
+              "avaliacao",
+              "valor"
+            ],
+            "properties": {
+              "disciplina": {
+                "type": "string"
+              },
+              "avaliacao": {
+                "type": "string"
+              },
+              "valor": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

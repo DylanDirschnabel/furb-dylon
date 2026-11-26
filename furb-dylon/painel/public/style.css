@@ -1,0 +1,39 @@
+:root {
+  --azul-1: #0b66b1; --azul-2: #1578c9; --fundo: #f6f8f8; --lateral: #3b3b3b; --lateral-txt: #c9d1d6;
+  --th: #dae8ef; --borda: #dfe5e8; --ok: #2e7d32; --ok-bg: #e3f2e5; --erro: #c62828; --erro-bg: #fdeaea;
+  --aviso: #a86400; --aviso-bg: #fff3dc; --cinza: #6b7a83;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: 'Titillium Web', 'Segoe UI', Arial, sans-serif; background: var(--fundo); color: #1d2327; font-size: 14px; }
+header { position: sticky; top: 0; z-index: 5; height: 48px; display: flex; align-items: center; gap: 22px; padding: 0 18px;
+         background: linear-gradient(var(--azul-1), var(--azul-2)); color: #fff; }
+header .marca { font-weight: 600; font-style: italic; font-size: 20px; }
+header a { color: #fff; text-decoration: none; opacity: .75; font-weight: 600; }
+header a.ativo, header a:hover { opacity: 1; border-bottom: 2px solid #fff; }
+.card { background: #fff; border: 1px solid var(--borda); border-radius: 4px; overflow: hidden; }
+.card h2 { margin: 0; padding: 7px 12px; font-size: 14px; font-weight: 600; color: #fff; text-align: center; text-transform: uppercase; letter-spacing: .03em;
+           background: linear-gradient(var(--azul-1), var(--azul-2)); }
+.card .corpo { padding: 14px; }
+.sub { color: var(--cinza); font-size: 12px; margin: 0 0 8px; }
+table { width: 100%; border-collapse: collapse; }
+th { background: var(--th); text-align: left; font-weight: 600; padding: 5px 8px; font-size: 13px; }
+td { padding: 5px 8px; border-bottom: 1px solid #eef2f4; font-size: 13px; vertical-align: top; }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+.badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 12px; font-weight: 600; }
+.b-ok { background: var(--ok-bg); color: var(--ok); } .b-erro { background: var(--erro-bg); color: var(--erro); }
+.b-aviso { background: var(--aviso-bg); color: var(--aviso); } .b-cinza { background: #eceff1; color: #455a64; }
+label { display: flex; flex-direction: column; font-size: 13px; color: #1d2327; gap: 3px; font-weight: 600; }
+input { font: inherit; font-weight: 400; padding: 6px 9px; border: 1px solid #c4ced4; border-radius: 3px; }
+input:focus { outline: none; border-color: var(--azul-2); box-shadow: 0 0 0 2px rgba(21,120,201,.15); }
+button { font: inherit; font-weight: 600; padding: 7px 14px; border: 0; border-radius: 3px; cursor: pointer; background: var(--azul-2); color: #fff; }
+button:hover { background: var(--azul-1); } button:disabled { opacity: .5; cursor: wait; }
+button.secundario { background: #e3ebf0; color: #1d2327; } button.secundario:hover { background: #d3dee5; }
+button.perigo { background: #d84343; }
+.medidor { height: 10px; background: #e3ebf0; border-radius: 5px; overflow: hidden; margin: 6px 0 4px; }
+.medidor div { height: 100%; background: var(--azul-2); transition: width .3s; }
+.resultado { background: #f3f7f9; border-left: 3px solid var(--azul-2); padding: 8px 10px; font-size: 13px; white-space: pre-wrap; }
+.resultado:empty { display: none; }
+.vazio { color: var(--cinza); font-style: italic; padding: 6px 0; }
+
+button.mini { padding: 3px 10px; font-size: 12px; }
+td.acao { text-align: right; white-space: nowrap; }

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Furb Dylon</title>
+<link href="https://fonts.googleapis.com/css2?family=Titillium+Web:ital,wght@0,400;0,600;1,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  .layout { display: flex; min-height: calc(100vh - 48px); }
+  nav { width: 230px; flex-shrink: 0; background: var(--lateral); color: var(--lateral-txt); position: sticky; top: 48px; height: calc(100vh - 48px); z-index: 4; }
+  nav .destaque-demo { margin: 14px 14px 4px; }
+  nav .destaque-demo button { width: 100%; padding: 12px; font-size: 15px; background: linear-gradient(#f5b400, #e09a00); color: #2b2100; border-radius: 4px; }
+  nav .destaque-demo button:hover { background: #f5b400; }
+  nav .grupo { padding: 14px 16px 8px; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: #8d989e; }
+  nav button.falha { display: block; width: 100%; text-align: left; background: none; border-radius: 0; border-bottom: 1px solid #474747;
+                     color: var(--lateral-txt); padding: 9px 16px; font-weight: 400; }
+  nav button.falha:hover { background: #474747; color: #fff; }
+  nav button.falha b { color: #fff; margin-right: 6px; }
+  nav .acoes { padding: 12px 16px; display: flex; flex-direction: column; gap: 6px; }
+  nav .acoes button { background: #474747; } nav .acoes button:hover { background: #555; }
+  nav .aviso { margin: 8px 16px; font-size: 11px; color: #ffb4a8; }
+  main { flex: 1; padding: 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(440px, 1fr)); gap: 14px; align-content: start; }
+  .largo { grid-column: 1 / -1; }
+  .demo { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .demo button { font-size: 16px; padding: 10px 22px; }
+  #resultado { margin-top: 12px; }
+  .logs { background: #1e2428; color: #d5dde2; font: 12px/1.45 Consolas, 'Courier New', monospace; height: 340px; overflow: auto; padding: 8px 10px; white-space: pre-wrap; border-radius: 3px; }
+  .logs .destaque { color: #ffd54f; } .logs .ruim { color: #ff8a80; }
+  .abas { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+  .abas button { padding: 4px 10px; font-size: 13px; }
+  .linha-logs { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  #btn-zerar-logs { padding: 4px 10px; font-size: 13px; white-space: nowrap; }
+  .usuario-topo { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+  button.sair { background: rgba(255,255,255,.18); padding: 4px 14px; } button.sair:hover { background: rgba(255,255,255,.3); }
+  .filtros { display: flex; gap: 10px; align-items: end; margin-bottom: 10px; }
+  .filtros select { font: inherit; padding: 5px 8px; border: 1px solid #c4ced4; border-radius: 3px; min-width: 220px; }
+  th.ordena { cursor: pointer; user-select: none; } th.ordena:hover { background: #cbdde7; }
+  th.ordena::after { content: ' ↕'; color: #9fb3be; font-size: 11px; }
+  th.asc::after { content: ' ▲'; color: var(--azul-1); } th.desc::after { content: ' ▼'; color: var(--azul-1); }
+  .secao { grid-column: 1 / -1; margin: 6px 0 -4px; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--cinza); }
+</style>
+</head>
+<body>
+<header>
+  <div class="marca">Furb Dylon</div>
+  <div class="usuario-topo"><span id="usuario"></span><button id="btn-sair" class="sair">Sair</button></div>
+</header>
+<div class="layout">
+  <nav>
+    <div class="destaque-demo">
+      <button id="btn-demo">Demonstração ao vivo</button>
+    </div>
+    <div class="grupo">Cenários de falha</div>
+    <div id="falhas"></div>
+    <div class="acoes">
+      <button id="btn-religar">Religar contêineres parados</button>
+      <button id="btn-reset" class="perigo">Zerar tudo</button>
+    </div>
+    <div class="aviso" id="aviso-docker"></div>
+  </nav>
+  <main>
+    <section class="card largo">
+      <h2>Notas</h2>
+      <div class="corpo">
+        <div class="filtros">
+          <label>Disciplina <select id="filtro-disciplina"><option value="">Todas</option></select></label>
+          <span class="sub" id="contagem-notas" style="margin:0 0 6px"></span>
+          <span class="sub" id="ultima-raspagem" style="margin:0 0 6px 16px"></span>
+        </div>
+        <table><thead><tr>
+          <th class="ordena" data-campo="matricula">Usuário</th>
+          <th class="ordena" data-campo="disciplina">Disciplina</th>
+          <th class="ordena" data-campo="avaliacao">Avaliação</th>
+          <th class="ordena num" data-campo="valor">Nota</th>
+          <th class="ordena" data-campo="coletado_em">Detectada em</th>
+        </tr></thead><tbody id="tb-notas"></tbody></table>
+      </div>
+    </section>
+
+    <section class="card largo">
+      <h2>Logs</h2>
+      <div class="corpo">
+        <div class="linha-logs"><div class="abas" id="abas-logs"></div><button class="secundario" id="btn-zerar-logs">Zerar logs</button></div>
+        <div class="logs" id="caixa-logs">Carregando…</div>
+      </div>
+    </section>
+
+    <div class="secao">Infraestrutura</div>
+    <section class="card largo">
+      <h2>Filas e contêineres</h2>
+      <div class="corpo">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div>
+            <table><thead><tr><th>Fila SQS</th><th class="num">Na fila</th><th class="num">Processando</th><th class="num">DLQ</th></tr></thead><tbody id="tb-filas"></tbody></table>
+          </div>
+          <table><thead><tr><th>Contêiner</th><th>Estado</th><th></th></tr></thead><tbody id="tb-conteineres"></tbody></table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+async function api(metodo, url, corpo) {
+  const r = await fetch(url, { method: metodo, headers: corpo ? { 'Content-Type': 'application/json' } : {}, body: corpo ? JSON.stringify(corpo) : undefined });
+  return r.json();
+}
+function badge(s) {
+  const cls = { running: 'b-ok', exited: 'b-erro', dead: 'b-erro', paused: 'b-aviso' }[s] ?? 'b-cinza';
+  return `<span class="badge ${cls}">${esc(s)}</span>`;
+}
+async function comBotao(btn, fn) { btn.disabled = true; try { await fn(); } finally { btn.disabled = false; } }
+const mostrar = () => {};
+const ocupados = new Set();
+function botaoConteiner(c) {
+  if (c.servico === 'painel') return '';
+  const ligado = c.estado === 'running';
+  const acao = ligado ? 'desligar' : 'ligar';
+  const dis = ocupados.has(c.nome) ? ' disabled' : '';
+  return `<button class="mini ${ligado ? 'secundario' : ''}" data-nome="${esc(c.nome)}" data-acao="${acao}"${dis}>${ligado ? 'Desligar' : 'Ligar'}</button>`;
+}
+
+async function atualizar() {
+  let e; try { e = await api('GET', '/api/estado'); } catch { return; }
+  const notas = e.notas ?? {};
+  ultimasNotas = notas.notas ?? []; notasErro = !!notas.erro;
+  ultimasColetas = (notas.coletas ?? []).filter((c) => !TESTE.test(c.matricula));
+  desenharNotas();
+  const f = e.filas ?? {};
+  $('#tb-filas').innerHTML = ['inscricoes', 'coletor', 'notas', 'notificacao'].filter((k) => f[k]).map((k) => [k, f[k]]).map(([nome, q]) =>
+    `<tr><td>${nome}</td><td class="num">${q.visiveis}</td><td class="num">${q.emProcessamento}</td><td class="num">${q.dlq ? `<span class="badge b-erro">${q.dlq}</span>` : 0}</td></tr>`).join('')
+    || '<tr><td colspan="4" class="vazio">broker indisponível</td></tr>';
+  const cont = Array.isArray(e.conteineres) ? e.conteineres.filter((c) => c.servico !== 'aws-init') : [];
+  $('#tb-conteineres').innerHTML = cont.map((c) => `<tr><td>${esc(c.nome)}</td><td>${badge(c.estado)}</td><td class="acao">${botaoConteiner(c)}</td></tr>`).join('')
+    || `<tr><td colspan="3" class="vazio">${e.conteineres?.erro ? 'sem acesso ao Docker' : 'nenhum'}</td></tr>`;
+  $('#aviso-docker').textContent = e.conteineres?.erro ? `Sem acesso ao Docker: F2, F6 e F8 não vão funcionar (${e.conteineres.erro}).` : '';
+}
+
+let ultimasNotas = [], notasErro = false, ordem = { campo: 'coletado_em', dir: -1 };
+let ultimasColetas = [];
+const TESTE = /^(f\d|carga-|escala-|queda-|pos-veneno-)/;
+function haQuanto(t) {
+  const s = Math.max(0, Math.round((Date.now() - new Date(t).getTime()) / 1000));
+  if (s < 60) return `há ${s} s`;
+  if (s < 3600) return `há ${Math.floor(s / 60)} min`;
+  return `há ${Math.floor(s / 3600)} h`;
+}
+function desenharRaspagem() {
+  $('#ultima-raspagem').textContent = ultimasColetas.length
+    ? 'Última raspagem do DION: ' + ultimasColetas.map((c) => `${c.matricula} em ${dataHora(c.coletado_em)} (${haQuanto(c.coletado_em)})`).join(', ')
+    : '';
+}
+setInterval(desenharRaspagem, 1000);
+const dataHora = (t) => (t ? new Date(t).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '');
+function desenharNotas() {
+  const sel = $('#filtro-disciplina');
+  const disciplinas = [...new Set(ultimasNotas.map((n) => n.disciplina))].sort();
+  const atual = sel.value;
+  sel.innerHTML = '<option value="">Todas</option>' + disciplinas.map((d) => `<option ${d === atual ? 'selected' : ''}>${esc(d)}</option>`).join('');
+  const lista = ultimasNotas.filter((n) => !sel.value || n.disciplina === sel.value).sort((a, b) => {
+    const x = a[ordem.campo], y = b[ordem.campo];
+    const c = ordem.campo === 'valor' ? Number(x) - Number(y) : String(x).localeCompare(String(y), 'pt-BR', { numeric: true });
+    return c * ordem.dir;
+  });
+  $('#contagem-notas').textContent = `${lista.length} nota(s)`;
+  desenharRaspagem();
+  document.querySelectorAll('th.ordena').forEach((th) => {
+    th.classList.toggle('asc', th.dataset.campo === ordem.campo && ordem.dir === 1);
+    th.classList.toggle('desc', th.dataset.campo === ordem.campo && ordem.dir === -1);
+  });
+  $('#tb-notas').innerHTML = lista.map((n) =>
+    `<tr><td>${esc(n.matricula)}</td><td>${esc(n.disciplina)}</td><td>${esc(n.avaliacao)}</td><td class="num">${Number(n.valor).toFixed(1)}</td><td>${dataHora(n.coletado_em)}</td></tr>`).join('')
+    || `<tr><td colspan="5" class="vazio">${notasErro ? 'serviço notas indisponível' : 'nenhuma nota'}</td></tr>`;
+}
+$('#filtro-disciplina').onchange = desenharNotas;
+document.querySelectorAll('th.ordena').forEach((th) => th.addEventListener('click', () => {
+  ordem = { campo: th.dataset.campo, dir: ordem.campo === th.dataset.campo ? -ordem.dir : 1 };
+  desenharNotas();
+}));
+
+let usuario = new URLSearchParams(location.search).get('u');
+try { usuario ??= localStorage.getItem('dylon.usuario'); } catch {}
+if (!usuario) location.href = 'index.html';
+$('#usuario').textContent = usuario ?? '';
+$('#btn-sair').onclick = () => { try { localStorage.removeItem('dylon.usuario'); } catch {} location.href = 'index.html'; };
+
+$('#btn-demo').onclick = (ev) => comBotao(ev.target, async () => {
+  mostrar('Esquecendo notas e raspando o DION…', true);
+  const r = await api('POST', '/api/demo/ao-vivo');
+  mostrar(r.erro ?? `${r.apagadas} nota(s) esquecida(s) de ${r.alunos.join(', ')}. Raspagem feita: acompanhe as notas voltarem e o e-mail sair (logs da notificacao).`);
+});
+$('#btn-reset').onclick = (ev) => comBotao(ev.target, async () => {
+  await api('POST', '/api/demo/reset');
+  mostrar('Tudo zerado. Voltando para o login…', true);
+  try { localStorage.removeItem('dylon.usuario'); } catch {}
+  setTimeout(() => { location.href = 'index.html'; }, 1500);
+});
+$('#tb-conteineres').addEventListener('click', async (ev) => {
+  const b = ev.target.closest('button[data-nome]');
+  if (!b) return;
+  ocupados.add(b.dataset.nome); b.disabled = true;
+  try { await api('POST', `/api/conteineres/${encodeURIComponent(b.dataset.nome)}/${b.dataset.acao}`); }
+  finally { ocupados.delete(b.dataset.nome); atualizar(); }
+});
+$('#btn-religar').onclick = (ev) => comBotao(ev.target, async () => {
+  const r = await api('POST', '/api/religar');
+  mostrar(r.religados?.length ? `Religados: ${r.religados.join(', ')}` : 'Nenhum contêiner parado.');
+});
+
+const FALHAS = [
+  ['F1', 'Compensação'],
+  ['F2', 'Serviço morre no meio'],
+  ['F3', 'Mensagem duplicada'],
+  ['F4', 'Mensagem venenosa'],
+  ['F5', 'Corrida pelo recurso'],
+  ['F6', 'Broker fora do ar'],
+  ['F7', 'Resposta tardia'],
+  ['F8', 'Escala horizontal'],
+];
+const LOG_DA_FALHA = { F1: 'inscricoes', F2: 'notas', F3: 'notas', F4: 'notas', F5: 'inscricoes', F6: 'notas', F7: 'inscricoes', F8: 'notas' };
+$('#falhas').innerHTML = FALHAS.map(([id, nome]) =>
+  `<button class="falha" data-falha="${id}"><b>${id}</b>${nome}</button>`).join('');
+$('#falhas').addEventListener('click', (ev) => {
+  const btn = ev.target.closest('button[data-falha]');
+  if (!btn) return;
+  comBotao(btn, async () => {
+    const id = btn.dataset.falha;
+    servicoLog = LOG_DA_FALHA[id]; atualizarLogs(true);
+    mostrar(`${id} em execução…`, true);
+    const r = await api('POST', `/api/falhas/${id}`, {});
+    const extra = { ...r }; delete extra.passo; delete extra.voltaEm;
+    mostrar(`${id}: ${r.passo ?? r.erro ?? ''}${Object.keys(extra).length ? `\n${JSON.stringify(extra, null, 2)}` : ''}`);
+  });
+});
+
+const SERVICOS = ['inscricoes', 'coletor-dion', 'notas', 'notificacao', 'ministack'];
+let servicoLog = 'inscricoes';
+$('#abas-logs').innerHTML = SERVICOS.map((s) => `<button class="secundario" data-log="${s}">${s}</button>`).join('');
+$('#btn-zerar-logs').onclick = (ev) => comBotao(ev.target, async () => {
+  await api('POST', '/api/logs/zerar');
+  await atualizarLogs(true);
+});
+$('#abas-logs').addEventListener('click', (ev) => {
+  const b = ev.target.closest('button[data-log]');
+  if (b) { servicoLog = b.dataset.log; atualizarLogs(true); }
+});
+async function atualizarLogs(rolar) {
+  document.querySelectorAll('#abas-logs button').forEach((b) => { b.className = b.dataset.log === servicoLog ? '' : 'secundario'; });
+  const caixa = $('#caixa-logs');
+  const noFim = caixa.scrollTop + caixa.clientHeight >= caixa.scrollHeight - 30;
+  const r = await api('GET', `/api/logs/${servicoLog}?tail=80`).catch(() => ({ linhas: ['(painel sem acesso aos logs)'] }));
+  caixa.innerHTML = (r.linhas ?? [`(sem acesso aos logs: ${r.erro})`]).map((l) => {
+    const t = esc(l);
+    if (/COMPENSAÇÃO|idempot|tardia|réplica|restabelecida|DLQ|e-mail/i.test(l)) return `<span class="destaque">${t}</span>`;
+    if (/ERROR|WARN|indisponível|falha/i.test(l)) return `<span class="ruim">${t}</span>`;
+    return t;
+  }).join('\n') || '(sem logs novos)';
+  if (rolar || noFim) caixa.scrollTop = caixa.scrollHeight;
+}
+
+atualizar(); atualizarLogs(true);
+setInterval(atualizar, 2000);
+setInterval(() => atualizarLogs(false), 3000);
+</script>
+</body>
+</html>

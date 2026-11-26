@@ -1,0 +1,15 @@
+{
+  "name": "painel",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-sqs": "^3.693.0",
+    "dockerode": "^4.0.2",
+    "express": "^4.21.1",
+    "@smithy/node-http-handler": "^3.3.0"
+  }
+}

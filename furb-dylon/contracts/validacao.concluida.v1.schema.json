@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "validacao.concluida.v1.schema.json",
+  "title": "validacao.concluida",
+  "description": "Resposta coletor-dion -> inscricoes",
+  "allOf": [
+    {
+      "$ref": "envelope.schema.json"
+    }
+  ],
+  "properties": {
+    "type": {
+      "const": "validacao.concluida"
+    },
+    "version": {
+      "const": 1
+    },
+    "payload": {
+      "type": "object",
+      "required": [
+        "inscricaoId",
+        "ok",
+        "motivo"
+      ],
+      "properties": {
+        "inscricaoId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "ok": {
+          "type": "boolean"
+        },
+        "motivo": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            null,
+            "SENHA_INVALIDA",
+            "DION_INDISPONIVEL"
+          ]
+        }
+      }
+    }
+  }
+}

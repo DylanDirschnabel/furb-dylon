@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "notas.snapshot.v1.schema.json",
+  "title": "notas.snapshot",
+  "description": "Evento coletor-dion -> notas: todas as notas lidas numa raspagem",
+  "allOf": [
+    {
+      "$ref": "envelope.schema.json"
+    }
+  ],
+  "properties": {
+    "type": {
+      "const": "notas.snapshot"
+    },
+    "version": {
+      "const": 1
+    },
+    "payload": {
+      "type": "object",
+      "required": [
+        "matricula",
+        "coletaId",
+        "notas"
+      ],
+      "properties": {
+        "matricula": {
+          "type": "string"
+        },
+        "coletaId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "notas": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "disciplina",
+              "avaliacao",
+              "valor"
+            ],
+            "properties": {
+              "disciplina": {
+                "type": "string"
+              },
+              "avaliacao": {
+                "type": "string"
+              },
+              "valor": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

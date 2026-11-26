@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "inscricao.recusada.v1.schema.json",
+  "title": "inscricao.recusada",
+  "description": "Evento (SNS inscricoes-eventos) -> notificacao",
+  "allOf": [
+    {
+      "$ref": "envelope.schema.json"
+    }
+  ],
+  "properties": {
+    "type": {
+      "const": "inscricao.recusada"
+    },
+    "version": {
+      "const": 1
+    },
+    "payload": {
+      "type": "object",
+      "required": [
+        "inscricaoId",
+        "matricula",
+        "email",
+        "motivo"
+      ],
+      "properties": {
+        "inscricaoId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "matricula": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string",
+          "format": "email"
+        },
+        "motivo": {
+          "type": "string",
+          "enum": [
+            "SEM_VAGAS",
+            "SENHA_INVALIDA",
+            "DION_INDISPONIVEL",
+            "TIMEOUT"
+          ]
+        }
+      }
+    }
+  }
+}
